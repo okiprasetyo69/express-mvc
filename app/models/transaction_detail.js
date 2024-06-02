@@ -41,7 +41,7 @@ const TransactionDetail = sequelize.define('TransactionDetail',{
     },
 });
 
-Transaction.hasMany(TransactionDetail, { foreignKey: 'transaction_id', as: 'items' });
+Transaction.hasMany(TransactionDetail, { foreignKey: 'transaction_id', as: 'transaction_detail' });
 TransactionDetail.belongsTo(Transaction, { foreignKey: 'transaction_id', as: 'transaction' });
 
 module.exports = TransactionDetail;

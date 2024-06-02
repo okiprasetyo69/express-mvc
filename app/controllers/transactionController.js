@@ -25,25 +25,38 @@ exports.getTransactionById = async(req, res)=>{
 exports.createTransaction = async(req, res)=>{
     try {
         //const newTransaction = await Transaction.create(req.body); // Only transaction
-        const {items} = req.body;
-        const newTransaction = await Transaction.create(req.body);  
-        const newTransactionDetail = await items.map(item =>({
-            ...item,
-            transaction_id : transaction.id,
-            description : req.params.description,
-            amount : req.params.amount,
-            status_payment : req.params.status_payment,
-            date : req.params.date,
-            due_date : req.params.due_date,
-            paid_date : req.params.paid_date,
-            payment_receipt : req.params.payment_receipt,
-        }));
+        const {total_billing, paid_payment, outstanding_payment, transaction_detail} = req.body;
+        
+        console.log(req.body.transaction_detail)
 
-        await TransactionDetail.bulkCreate(newTransactionDetail);
-        res.status(201).json({ newTransaction, items: newTransactionDetail });
-        //res.status(201).json(newTransaction); 
+        const newTransaction = await Transaction.create({
+            total_billing,
+            paid_payment,
+            outstanding_payment,
+            transaction_detail
+        },{
+            include : [{model:TransactionDetail, as:'transaction_detail'}]
+        });
+        
+        const result = {
+            total_billing: newTransaction.total_billing,
+            paid_payment: newTransaction.paid_payment,
+            outstanding_payment: newTransaction.outstanding_payment,
+            transaction_detail: newTransaction.transaction_detail.map(detail=>({
+                transaction_id : newTransaction.id,
+                description: detail.description,
+                amount : detail.amount,
+                status_payment: detail.status_payment,
+                date: detail.date,
+                due_date : detail.due_date,
+                paid_date : detail.paid_date,
+                payment_recepit : detail.payment_recepit
+            }))
+        };
+         res.status(201).json(result); 
     } catch (error) {
         res.status(500).json({ message: 'Error creating transaction', error });
+
     }
 };
 

@@ -1,6 +1,7 @@
 // server.js
 const path = require('path');
 const express = require('express');
+const logger = require('./logger');
 const bodyParser = require('body-parser');
 const userRoutes = require('./app/routes/userRoutes');
 const transactionRoutes = require('./app/routes/transactionRoutes')
@@ -24,6 +25,12 @@ app.get('/', (req, res) => {
   // redirecr to View HTML
   // res.redirect('/users');
   res.send('Welcome to the RESTful API with Express and MySQL!');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // Menjalankan server
