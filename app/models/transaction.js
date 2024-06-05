@@ -13,7 +13,11 @@ const Transaction = sequelize.define('Transaction',{
     outstanding_payment:{
         type:DataTypes.BIGINT,
         allowNull:false,
-    }
+    },
+    user_id:{
+        type:DataTypes.BIGINT,
+        allowNull:false,
+    },
 });
 
 module.exports = Transaction;

@@ -25,14 +25,20 @@ exports.getTransactionById = async(req, res)=>{
 exports.createTransaction = async(req, res)=>{
     try {
         //const newTransaction = await Transaction.create(req.body); // Only transaction
-        const {total_billing, paid_payment, outstanding_payment, transaction_detail} = req.body;
-        
-        console.log(req.body.transaction_detail)
+        const {paid_payment, transaction_detail, user_id} = req.body;
+        let total_billing = 0;
 
+        transaction_detail.forEach(detail => {
+            total_billing += detail.amount
+        });
+
+        let outstanding_payment = req.body.paid_payment - total_billing
+        
         const newTransaction = await Transaction.create({
             total_billing,
             paid_payment,
             outstanding_payment,
+            user_id,
             transaction_detail
         },{
             include : [{model:TransactionDetail, as:'transaction_detail'}]
@@ -40,6 +46,7 @@ exports.createTransaction = async(req, res)=>{
         
         const result = {
             total_billing: newTransaction.total_billing,
+            user_id:newTransaction.user_id,
             paid_payment: newTransaction.paid_payment,
             outstanding_payment: newTransaction.outstanding_payment,
             transaction_detail: newTransaction.transaction_detail.map(detail=>({
