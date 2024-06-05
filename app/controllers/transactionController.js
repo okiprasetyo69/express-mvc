@@ -1,4 +1,5 @@
 const {Transaction, TransactionDetail} = require('../models')
+const { validationResult } = require('express-validator');
 
 exports.getAllTransactions = async(req, res)=>{
     try{
@@ -25,6 +26,12 @@ exports.getTransactionById = async(req, res)=>{
 exports.createTransaction = async(req, res)=>{
     try {
         //const newTransaction = await Transaction.create(req.body); // Only transaction
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        
         const {paid_payment, transaction_detail, user_id} = req.body;
         let total_billing = 0;
 
