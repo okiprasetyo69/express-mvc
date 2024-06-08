@@ -2,7 +2,9 @@ const {Transaction, TransactionDetail} = require('../models')
 
 exports.getAllTransactions = async(req, res)=>{
     try{
-        const transactions = await Transaction.findAll()
+        const transactions = await Transaction.findAll({
+            include: [{model: TransactionDetail, as:'transaction_detail'}]
+        })
         
         res.status(200).json(transactions);
     }catch(error){
@@ -12,7 +14,9 @@ exports.getAllTransactions = async(req, res)=>{
 
 exports.getTransactionById = async(req, res)=>{
     try{
-        const transaction = await Transaction.findByPk(req.params.id)
+        const transaction = await Transaction.findByPk(req.params.id, {
+            include:[{model:TransactionDetail, as:'transaction_detail'}]
+        })
         if(!transaction){
             return res.status(404).json({ message: 'transaction not found' });
         }
