@@ -1,5 +1,6 @@
 const {Transaction, TransactionDetail} = require('../models')
 const { validationResult } = require('express-validator');
+const sequelize = require('../../config/database');
 
 exports.getAllTransactions = async(req, res)=>{
     try{
@@ -44,7 +45,8 @@ exports.createTransaction = async(req, res)=>{
         });
 
         let outstanding_payment = req.body.paid_payment - total_billing
-        
+        outstanding_payment = Math.abs(outstanding_payment)
+
         const newTransaction = await Transaction.create({
             total_billing,
             paid_payment,
@@ -68,10 +70,10 @@ exports.createTransaction = async(req, res)=>{
                 date: detail.date,
                 due_date : detail.due_date,
                 paid_date : detail.paid_date,
-                payment_recepit : detail.payment_recepit
+                payment_receipt : detail.payment_receipt
             }))
         };
-         res.status(201).json(result); 
+        res.status(201).json(result); 
     } catch (error) {
         res.status(500).json({ message: 'Error creating transaction', error });
 
@@ -79,18 +81,46 @@ exports.createTransaction = async(req, res)=>{
 };
 
 exports.updateTransaction = async(req, res)=>{
-    try{
-        const [updated] = await Transaction.update(req.body,{
-            where : {id: req.params.id}
-        });
 
-        if(!updated){
-            return res.status(404).json({ message: 'Transacntion not found' });
+    try{
+        const {paid_payment, transaction_detail, user_id} = req.body;
+        let total_billing = 0;
+
+        const transaction = await Transaction.findByPk(req.params.id);
+        
+        if(!transaction){
+            return res.status(404).json({ message: 'Transaksi not found' });
         }
 
-        const updateTransaction = await Transaction.findByPk(req.params.id) 
-        res.status(200).json(updateTransaction);
+        transaction_detail.forEach(detail => {
+            total_billing += detail.amount
+        });
+
+        transaction.total_billing = total_billing
+        transaction.paid_payment = paid_payment
+        transaction.user_id = user_id
+        transaction.outstanding_payment = Math.abs(paid_payment - total_billing)
+
+        await transaction.save()
+
+        if(transaction_detail){
+            await TransactionDetail.destroy({ where: { transaction_id: req.params.id } });
+            const transaction_detail_list = transaction_detail.map(detail=>({
+                transaction_id : transaction.id,
+                description: detail.description,
+                amount : detail.amount,
+                status_payment: detail.status_payment,
+                date: detail.date,
+                due_date : detail.due_date,
+                paid_date : detail.paid_date,
+                payment_receipt : detail.payment_receipt
+            }));
+            await TransactionDetail.bulkCreate(transaction_detail_list);
+        }
+        
+        res.json({ message: 'Transaction updated successfully', transaction });
     }catch(error){
+        // await t.rollback();
         res.status(500).json({ message: 'Error updating transaction', error });
     }
 };
@@ -104,6 +134,9 @@ exports.deleteTransaction = async(req, res)=>{
         if(!deleted){
             return res.status(404).json({ message: 'Transaction not found' });
         }
+
+        await TransactionDetail.destroy({ where: { transaction_id: req.params.id } });
+        
         res.status(204).json();
 
     }catch(error){

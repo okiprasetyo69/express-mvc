@@ -1,10 +1,10 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('express_test', 'root', '', 
+const sequelize = new Sequelize('express_test', 'root', 'root', 
     {
         host: 'localhost',
         dialect: 'mysql',
-        port: 3306,
+        port: 8889,
     }
 );
 
