@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 const { body } = require('express-validator');
+const authenticateToken = require('../middleware/auth');
 
 // TRANSACTION ROUTES
-router.get('/', transactionController.getAllTransactions);
-router.get('/:id', transactionController.getTransactionById);
+router.get('/', authenticateToken,transactionController.getAllTransactions);
+router.get('/:id', authenticateToken, transactionController.getTransactionById);
 router.post('/', [
     body('paid_payment').isInt().withMessage('Paid payment shlould be integer !'),
     body('user_id').isInt().withMessage('User Id shlould be integer !'),
@@ -17,8 +18,9 @@ router.post('/', [
     // body('*.due_date').isISO8601().withMessage('Date should be format date Y-m-d !'),
     // body('*.paid_date').isISO8601().withMessage('Date should be format date Y-m-d !'),
     // body('*.payment_receipt').isString().optional().withMessage('Payment receipt should be a string'),
-],transactionController.createTransaction);
-router.put('/:id', transactionController.updateTransaction);
-router.delete('/:id', transactionController.deleteTransaction);
+], authenticateToken, transactionController.createTransaction);
+
+router.put('/:id', authenticateToken, transactionController.updateTransaction);
+router.delete('/:id', authenticateToken, transactionController.deleteTransaction);
 
 module.exports = router;
